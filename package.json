@@ -1,0 +1,24 @@
+{
+  "name": "personalbudgetproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ekji1/personalBudgetproject.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ekji1/personalBudgetproject/issues"
+  },
+  "homepage": "https://github.com/Ekji1/personalBudgetproject#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {},
+  "keywords": []
+}
