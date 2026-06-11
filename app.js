@@ -1,10 +1,109 @@
-const express = require(express);
+const express = require('express');
 const app = express();
+const { lerDados, salvarDados } = require('./storage');
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.status(200).json({ message: 'Budget API is running!' });
+    const dados = lerDados();
+    res.json(dados);
+});
+
+app.get('/receitas', (req, res) => {
+    const dados = lerDados();
+    res.status(200).json(dados.receitas);
+});
+
+app.get('/despesas', (req, res) => {
+    const dados = lerDados();
+    res.status(200).json(dados.despesas);
+});
+
+app.get('/receitas/:id', (req, res) => {
+   const dados = lerDados(); 
+   const item = dados.receitas.find(i =>  i.id === parseInt(req.params.id));
+
+   if(!item) {
+    return res.status(404).json({mensagem: "Valor não encontrado"});
+   }
+   res.status(200).json(item);
+});
+
+app.get('/despesas/:id', (req, res) => {
+    const dados = lerDados(); 
+    const item = dados.despesas.find(i => i.id === parseInt(req.params.id));
+    if(!item) {
+        return res.status(404).json({mensagem: "Valor não encontrado"});
+    }
+    res.status(200).json(item);
+});
+
+app.post('/receitas', (req, res) => {
+    const dados = lerDados();
+    const novoItem = {
+        id: dados.receitas.length > 0 ? dados.receitas[dados.receitas.length -1].id + 1 : 1,
+        nome: req.body.nome,
+        valor: req.body.valor
+    };
+
+    dados.receitas.push(novoItem);
+    salvarDados(dados);
+
+    res.status(201).json({ menssagem: "Receita adicionada.", item: novoItem });
+
+});
+
+app.post('/despesas', (req, res) => {
+    const dados = lerDados();
+    const novoItem = {
+        id: dados.despesas.length > 0  ? dados.despesas[dados.despesas.length -1].id + 1 : 1,
+        nome: req.body.nome,
+        valor: req.body.valor
+    };
+
+    dados.despesas.push(novoItem);
+    salvarDados(dados);
+
+    res.status(201).json({ mensagem: "Despesa adicionada.", item: novoItem });
+});
+
+
+app.put('/receitas/:id', (req, res) => {
+    const dados = lerDados();
+    const idParam = parseInt(req.params.id);
+    const index = dados.receitas.findIndex(i => i.id === idParam);
+
+    if(index === -1) {
+        return res.status(404).json({ mensagem: "Recita não encontrada para atualização." });
+    }
+
+    dados.receitas[index] = {
+        id: idParam,
+        nome: req.body.nome,
+        valor: req.body.valor
+    };
+
+    salvarDados(dados);
+    res.status(200).json({ mensagem: "Receita atualizada com sucesso", item: dados.receitas[index] });
+});
+
+app.put('/despesas/:id', (req, res) => {
+    const dados = lerDados();
+    const idParam = parseInt(req.params.id);
+    const index = dados.despesas.findIndex(i => i.id === idParam);
+
+    if(index === -1) {
+        return res.status(404).json({ mensagem: "Despesa não encontrada para atualização." })
+    }
+
+    dados.despesas[index] = {
+        id: idParam,
+        nome: req.body.nome,
+        valor: req.body.valor
+    };
+
+    salvarDados(dados);
+    res.status(200).json({ mensagem: "Despesa atualizada com sucesso", item: dados.despesas[index] });
 });
 
 module.exports = app;

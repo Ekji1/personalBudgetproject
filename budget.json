@@ -1,0 +1,10 @@
+{
+    "receitas": [
+        {"id": 1, "nome": "Salário", "valor": 3000},
+        {"id": 2, "nome": "Investimentos", "valor": 200}
+    ],
+    
+    "despesas": [
+        {"id": 1, "nome": "Aluguel", "valor": 1000}
+    ]
+}
