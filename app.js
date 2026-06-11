@@ -106,4 +106,35 @@ app.put('/despesas/:id', (req, res) => {
     res.status(200).json({ mensagem: "Despesa atualizada com sucesso", item: dados.despesas[index] });
 });
 
+app.delete('/receitas/:id', (req, res) => {
+    const dados = lerDados();
+    const idParam = parseInt(req.params.id);
+    const index = dados.receitas.findIndex(i => i.id === idParam);
+
+    if(index === -1) {
+        return res.status(404).json({ mensagem: "Receita não encontrada." })
+    }
+
+    dados.receitas.splice(index, 1);
+    salvarDados(dados);
+
+    res.status(200).json({ mensagem: `Receita de id: ${idParam} deletada com sucesso.` });
+});
+
+app.delete('/despesas/:id', (req, res) => {
+    const dados = lerDados();
+    const idParam = parseInt(req.params.id);
+    const index = dados.despesas.findIndex(i => i.id === idParam);
+
+    if(index === -1) {
+        return res.status(404).json({ mensagem: "Despesa não encontrada." })
+    }
+
+    dados.despesas.splice(index, 1);
+    salvarDados(dados);
+
+    res.status(200).json({ mensagem: `Despesa de id: ${idParam} deletada com sucesso.`})
+});
+
+
 module.exports = app;
