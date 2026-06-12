@@ -39,7 +39,7 @@ app.get('/despesas/:id', (req, res) => {
 });
 
 app.get('/total', (req, res) => {
-    const dados = lerDados();
+    const dados = lerdados();
 
     const totalReceitas = dados.receitas.reduce((acc, i) => acc + i.valor, 0);
     const totalDespesas = dados.despesas.reduce((acc, i) => acc + i.valor, 0);
@@ -49,10 +49,18 @@ app.get('/total', (req, res) => {
         totalReceitas,
         totalDespesas,
         saldo
-     });
-});
+     })
+})
 
 app.post('/receitas', (req, res) => {
+
+    if(!req.body.nome || !req.body.valor) {
+        return res.status(400).json({ menssagem: "Nome e valor obrigatórios." });
+    }
+    if(isNaN(req.body.valor) || req.body.valor <= 0) {
+        return res.status(400).json({ menssagem: "Valor inválido." });
+    }
+
     const dados = lerDados();
     const novoItem = {
         id: dados.receitas.length > 0 ? dados.receitas[dados.receitas.length -1].id + 1 : 1,
@@ -68,6 +76,14 @@ app.post('/receitas', (req, res) => {
 });
 
 app.post('/despesas', (req, res) => {
+
+    if(!req.body.nome || !req.body.valor) {
+        return res.status(400).json({ menssagem: "Nome e valor obrigatórios." });
+    }
+    if(isNaN(req.body.valor) || req.body.valor <= 0) {
+        return res.status(400).json({ menssagem: "Valor inválido." });
+    }
+
     const dados = lerDados();
     const novoItem = {
         id: dados.despesas.length > 0  ? dados.despesas[dados.despesas.length -1].id + 1 : 1,
@@ -85,6 +101,11 @@ app.post('/despesas', (req, res) => {
 app.put('/receitas/:id', (req, res) => {
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
+
+    if(isNaN(idParam)) {
+        return res.status(400).json({ mensagem: "ID inválido." });
+    }
+
     const index = dados.receitas.findIndex(i => i.id === idParam);
 
     if(index === -1) {
@@ -104,6 +125,11 @@ app.put('/receitas/:id', (req, res) => {
 app.put('/despesas/:id', (req, res) => {
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
+
+    if(isNaN(idParam)) {
+       return res.status(400).json({ mensagem: "ID inválido." });
+    }
+
     const index = dados.despesas.findIndex(i => i.id === idParam);
 
     if(index === -1) {
@@ -123,6 +149,11 @@ app.put('/despesas/:id', (req, res) => {
 app.delete('/receitas/:id', (req, res) => {
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
+
+    if(isNaN(idParam)) {
+        return res.status(400).json({ mensagem: "ID inválido." });
+    }
+
     const index = dados.receitas.findIndex(i => i.id === idParam);
 
     if(index === -1) {
@@ -138,6 +169,11 @@ app.delete('/receitas/:id', (req, res) => {
 app.delete('/despesas/:id', (req, res) => {
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
+
+    if(isNaN(idParam)) {
+        return res.status(400).json({ mensagem: "ID inválido." });
+    }
+
     const index = dados.despesas.findIndex(i => i.id === idParam);
 
     if(index === -1) {
