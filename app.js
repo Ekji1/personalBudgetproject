@@ -38,6 +38,20 @@ app.get('/despesas/:id', (req, res) => {
     res.status(200).json(item);
 });
 
+app.get('/total', (req, res) => {
+    const dados = lerDados();
+
+    const totalReceitas = dados.receitas.reduce((acc, i) => acc + i.valor, 0);
+    const totalDespesas = dados.despesas.reduce((acc, i) => acc + i.valor, 0);
+    const saldo = totalReceitas - totalDespesas;
+
+    res.status(200).json({
+        totalReceitas,
+        totalDespesas,
+        saldo
+     });
+});
+
 app.post('/receitas', (req, res) => {
     const dados = lerDados();
     const novoItem = {
