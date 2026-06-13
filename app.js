@@ -55,10 +55,10 @@ app.get('/total', (req, res) => {
 app.post('/receitas', (req, res) => {
 
     if(!req.body.nome || !req.body.valor) {
-        return res.status(400).json({ menssagem: "Nome e valor obrigatórios." });
+        return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
     }
     if(isNaN(req.body.valor) || req.body.valor <= 0) {
-        return res.status(400).json({ menssagem: "Valor inválido." });
+        return res.status(400).json({ mensagem: "Valor inválido." });
     }
 
     const dados = lerDados();
@@ -71,17 +71,17 @@ app.post('/receitas', (req, res) => {
     dados.receitas.push(novoItem);
     salvarDados(dados);
 
-    res.status(201).json({ menssagem: "Receita adicionada.", item: novoItem });
+    res.status(201).json({ mensagem: "Receita adicionada.", item: novoItem });
 
 });
 
 app.post('/despesas', (req, res) => {
 
     if(!req.body.nome || !req.body.valor) {
-        return res.status(400).json({ menssagem: "Nome e valor obrigatórios." });
+        return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
     }
     if(isNaN(req.body.valor) || req.body.valor <= 0) {
-        return res.status(400).json({ menssagem: "Valor inválido." });
+        return res.status(400).json({ mensagem: "Valor inválido." });
     }
 
     const dados = lerDados();
@@ -99,9 +99,13 @@ app.post('/despesas', (req, res) => {
 
 
 app.put('/receitas/:id', (req, res) => {
+    if(!req.body.nome || !req.body.valor) {
+        return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
+    }
+
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
-
+  
     if(isNaN(idParam)) {
         return res.status(400).json({ mensagem: "ID inválido." });
     }
@@ -123,6 +127,10 @@ app.put('/receitas/:id', (req, res) => {
 });
 
 app.put('/despesas/:id', (req, res) => {
+    if(!req.body.nome || !req.body.valor) {
+        return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
+    }
+
     const dados = lerDados();
     const idParam = parseInt(req.params.id);
 
