@@ -39,7 +39,7 @@ app.get('/despesas/:id', (req, res) => {
 });
 
 app.get('/total', (req, res) => {
-    const dados = lerdados();
+    const dados = lerDados();
 
     const totalReceitas = dados.receitas.reduce((acc, i) => acc + i.valor, 0);
     const totalDespesas = dados.despesas.reduce((acc, i) => acc + i.valor, 0);
