@@ -1,58 +1,90 @@
 const express = require('express');
 const app = express();
-const { lerDados, salvarDados } = require('./storage');
+const pool = require('./database');
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    const dados = lerDados();
-    res.json(dados);
-});
-
-app.get('/receitas', (req, res) => {
-    const dados = lerDados();
-    res.status(200).json(dados.receitas);
-});
-
-app.get('/despesas', (req, res) => {
-    const dados = lerDados();
-    res.status(200).json(dados.despesas);
-});
-
-app.get('/receitas/:id', (req, res) => {
-   const dados = lerDados(); 
-   const item = dados.receitas.find(i =>  i.id === parseInt(req.params.id));
-
-   if(!item) {
-    return res.status(404).json({mensagem: "Valor não encontrado"});
-   }
-   res.status(200).json(item);
-});
-
-app.get('/despesas/:id', (req, res) => {
-    const dados = lerDados(); 
-    const item = dados.despesas.find(i => i.id === parseInt(req.params.id));
-    if(!item) {
-        return res.status(404).json({mensagem: "Valor não encontrado"});
+app.get('/', async (req, res) => {
+    try {
+        const receitas = await pool.query('SELECT * FROM receitas');
+        const despesas = await pool.query('SELECT * FROM despesas');
+        res.status(200).json({
+            receitas: receitas.rows,
+            despesas: despesas.rows
+        });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao buscar dados."});
     }
-    res.status(200).json(item);
 });
 
-app.get('/total', (req, res) => {
-    const dados = lerDados();
+app.get('/receitas', async (req, res) => {
+    try {
+        const resultado = await pool.query('SELECT * FROM receitas');
+        res.status(200).json(resultado.rows);
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao buscar receitas." });
+    }
+});
 
-    const totalReceitas = dados.receitas.reduce((acc, i) => acc + i.valor, 0);
-    const totalDespesas = dados.despesas.reduce((acc, i) => acc + i.valor, 0);
-    const saldo = totalReceitas - totalDespesas;
+app.get('/despesas', async (req, res) => {
+    try {
+        const resultado = await pool.query('SELECT * FROM despesas');
+        res.status(200).json(resultado.rows);
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao buscar despesas" });
+    }
+}); 
+
+app.get('/receitas/:id', async (req, res) => {
+   try {
+    const idParam = parseInt(req.params.id);
+    if(isNaN(idParam)) {
+        return res.status(400).json({ mensagem: "ID inválido." });
+    }
+    const resultado = await pool.query('SELECT * FROM receitas WHERE id = $1', [idParam]);
+    if(resultado.rows.length === 0) {
+        return res.status(404).json({ mensagem: "Receita não encontrada." });
+    }
+        res.status(200).json(resultado.rows[0]);
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao buscar receita." });
+   }
+});
+
+app.get('/despesas/:id', async (req, res) => {
+    try {
+        const idParam = parseInt(req.params.id);
+        if(isNaN(idParam)) {
+            return res.status(400).json({ mensagem: "ID inválido." });
+        }
+        const resultado = await pool.query('SELECT * FROM despesas WHERE id = $1', [idParam]);
+        if(resultado.rows.length === 0) {
+            return res.status(404).json({ mensagem: "Despesa não encontrada." });
+        }
+        res.status(200).json(resultado.rows[0]);
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao buscar despesa." });
+    }
+});
+
+app.get('/total', async (req, res) => {
+    try {
+        const receitas = await pool.query('SELECT SUM(valor) FROM receitas');
+        const despesas = await pool.query('SELECT SUM(valor) FROM despesas');
+        const totalReceitas = parseFloat(receitas.rows[0].sum) || 0;
+        const totalDespesas = parseFloat(despesas.rows[0].sum) || 0;
 
     res.status(200).json({
         totalReceitas,
         totalDespesas,
-        saldo
-     })
-})
+        saldo: totalReceitas - totalDespesas
+     });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao calcular total." });
+    }
+});
 
-app.post('/receitas', (req, res) => {
+app.post('/receitas', async (req, res) => {
 
     if(!req.body.nome || !req.body.valor) {
         return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
@@ -61,21 +93,15 @@ app.post('/receitas', (req, res) => {
         return res.status(400).json({ mensagem: "Valor inválido." });
     }
 
-    const dados = lerDados();
-    const novoItem = {
-        id: dados.receitas.length > 0 ? dados.receitas[dados.receitas.length -1].id + 1 : 1,
-        nome: req.body.nome,
-        valor: req.body.valor
-    };
-
-    dados.receitas.push(novoItem);
-    salvarDados(dados);
-
-    res.status(201).json({ mensagem: "Receita adicionada.", item: novoItem });
-
+    try {
+        const resultado = await pool.query('INSERT INTO receitas (nome, valor) VALUES ($1, $2) RETURNING *', [req.body.nome, req.body.valor]);
+        res.status(201).json({ mensagem: "Receita adicionada.", item: resultado.rows[0] });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao criar receita." });
+    }
 });
 
-app.post('/despesas', (req, res) => {
+app.post('/despesas', async (req, res) => {
 
     if(!req.body.nome || !req.body.valor) {
         return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
@@ -84,114 +110,90 @@ app.post('/despesas', (req, res) => {
         return res.status(400).json({ mensagem: "Valor inválido." });
     }
 
-    const dados = lerDados();
-    const novoItem = {
-        id: dados.despesas.length > 0  ? dados.despesas[dados.despesas.length -1].id + 1 : 1,
-        nome: req.body.nome,
-        valor: req.body.valor
-    };
-
-    dados.despesas.push(novoItem);
-    salvarDados(dados);
-
-    res.status(201).json({ mensagem: "Despesa adicionada.", item: novoItem });
+    try {
+        const resultado = await pool.query('INSERT INTO despesas (nome, valor) VALUES ($1, $2) RETURNING *', [req.body.nome, req.body.valor]);
+        res.status(201).json({ mensagem: "Despesa adicionada.", item: resultado.rows[0] });    
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao criar despesa." });
+    }
 });
 
 
-app.put('/receitas/:id', (req, res) => {
+app.put('/receitas/:id', async (req, res) => {
     if(!req.body.nome || !req.body.valor) {
         return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
-    }
-
-    const dados = lerDados();
+    }  
     const idParam = parseInt(req.params.id);
   
     if(isNaN(idParam)) {
         return res.status(400).json({ mensagem: "ID inválido." });
     }
 
-    const index = dados.receitas.findIndex(i => i.id === idParam);
-
-    if(index === -1) {
-        return res.status(404).json({ mensagem: "Recita não encontrada para atualização." });
+    try {
+        const resultado = await pool.query('UPDATE receitas SET nome = $1, valor = $2 WHERE id = $3 RETURNING *', [req.body.nome, req.body.valor, idParam]);
+        if(resultado.rows.length === 0) {
+            return res.status(404).json({ mensagem: "Receita não encontrada." });      
+    } 
+        res.status(200).json({ mensagem: "Receita atualizada.", item: resultado.rows[0] });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao atualizar receita." });
     }
-
-    dados.receitas[index] = {
-        id: idParam,
-        nome: req.body.nome,
-        valor: req.body.valor
-    };
-
-    salvarDados(dados);
-    res.status(200).json({ mensagem: "Receita atualizada com sucesso", item: dados.receitas[index] });
 });
 
-app.put('/despesas/:id', (req, res) => {
+app.put('/despesas/:id', async (req, res) => {
     if(!req.body.nome || !req.body.valor) {
         return res.status(400).json({ mensagem: "Nome e valor obrigatórios." });
     }
-
-    const dados = lerDados();
     const idParam = parseInt(req.params.id);
 
     if(isNaN(idParam)) {
        return res.status(400).json({ mensagem: "ID inválido." });
     }
 
-    const index = dados.despesas.findIndex(i => i.id === idParam);
-
-    if(index === -1) {
-        return res.status(404).json({ mensagem: "Despesa não encontrada para atualização." })
+    try {
+        const resultado = await pool.query('UPDATE despesas SET nome = $1, valor = $2 WHERE id = $3 RETURNING *', [req.body.nome, req.body.valor, idParam]);
+        if(resultado.rows.length === 0) {
+            return res.status(404).json({ mensagem: "Desepesa não encontrada." });
+        }
+        res.status(200).json({ mensagem: "Despesa atualizada.", item: resultado.rows[0] });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao atualizar despesa." });
     }
-
-    dados.despesas[index] = {
-        id: idParam,
-        nome: req.body.nome,
-        valor: req.body.valor
-    };
-
-    salvarDados(dados);
-    res.status(200).json({ mensagem: "Despesa atualizada com sucesso", item: dados.despesas[index] });
 });
 
-app.delete('/receitas/:id', (req, res) => {
-    const dados = lerDados();
+app.delete('/receitas/:id', async (req, res) => {
     const idParam = parseInt(req.params.id);
 
     if(isNaN(idParam)) {
         return res.status(400).json({ mensagem: "ID inválido." });
     }
 
-    const index = dados.receitas.findIndex(i => i.id === idParam);
-
-    if(index === -1) {
-        return res.status(404).json({ mensagem: "Receita não encontrada." })
-    }
-
-    dados.receitas.splice(index, 1);
-    salvarDados(dados);
-
-    res.status(200).json({ mensagem: `Receita de id: ${idParam} deletada com sucesso.` });
+    try {
+        const resultado = await pool.query('DELETE FROM receitas WHERE id = $1 RETURNING *', [idParam]);
+        if(resultado.rows.length === 0) {
+            return res.status(404).json({ mensagem: "Receita não encontrada." });
+        }
+        res.status(200).json({ mensagem: `Receita de id: ${idParam} deletada com sucesso.` });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao deletar receita." });
+    }  
 });
 
-app.delete('/despesas/:id', (req, res) => {
-    const dados = lerDados();
+app.delete('/despesas/:id', async (req, res) => {
     const idParam = parseInt(req.params.id);
-
     if(isNaN(idParam)) {
         return res.status(400).json({ mensagem: "ID inválido." });
     }
 
-    const index = dados.despesas.findIndex(i => i.id === idParam);
-
-    if(index === -1) {
-        return res.status(404).json({ mensagem: "Despesa não encontrada." })
+    try {
+        const resultado = await pool.query('DELETE FROM despesas WHERE id = $1 RETURNING *', [idParam]);
+        if(resultado.rows.length === 0) {
+            return res.status(404).json({ mensagem: "Despesa não encontrada." });
+        }
+        res.status(200).json({ mensagem: `Desepesa de id: ${idParam} deletada com sucesso.` });
+    } catch(err) {
+        res.status(500).json({ mensagem: "Erro ao deletar despesa."});
     }
-
-    dados.despesas.splice(index, 1);
-    salvarDados(dados);
-
-    res.status(200).json({ mensagem: `Despesa de id: ${idParam} deletada com sucesso.`})
 });
 
 

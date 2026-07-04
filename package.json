@@ -1,7 +1,7 @@
 {
   "name": "personalbudgetproject",
   "version": "1.0.0",
-  "description": "",
+  "description": "PERSONAL BUDGET API",
   "main": "Main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/Ekji1/personalBudgetproject#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "pg": "^8.22.0"
   },
   "keywords": [],
   "devDependencies": {
