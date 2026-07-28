@@ -18,11 +18,16 @@
   },
   "homepage": "https://github.com/Ekji1/personalBudgetproject#readme",
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "axios": "^1.18.1",
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "react-router-dom": "^7.18.1",
+    "tailwindcss": "^4.3.3"
   },
   "keywords": [],
   "devDependencies": {

@@ -116,6 +116,7 @@ Todas as rotas abaixo exigem o token no header:
 | DELETE | /despesas/:id | Remove uma despesa                            |
 | GET    | /total        | Retorna o total de receitas, despesas e saldo |
 
+Requisitos
 
 *Nome e valor são obrigatórios ao criar ou atualizar receitas e despesas
 *O valor deve ser um número maior que zero
